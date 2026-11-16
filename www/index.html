@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AI Thumbnail & Social Post Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@700;900&family=Noto+Nastaliq+Urdu:wght@700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #131a2a;
+      --border: #232f4b;
+      --accent: #6366f1;
+      --accent2: #ec4899;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 85px;
+      user-select: none;
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+    .badge {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
+    }
+    .icon-btn {
+      background: #1e293b; border: 1px solid var(--border); color: var(--text);
+      padding: 8px 12px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 600;
+    }
+    .container { padding: 14px; max-width: 680px; margin: 0 auto; }
+    .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .preset-btn {
+      background: var(--card); border: 1px solid var(--border); color: var(--muted);
+      padding: 8px 6px; border-radius: 10px; font-size: 11px; text-align: center; cursor: pointer;
+    }
+    .preset-btn.active {
+      border-color: var(--accent); color: #fff; background: rgba(99, 102, 241, 0.18); font-weight: 700;
+    }
+    .canvas-wrap {
+      background: #05080f; border: 1px solid var(--border); border-radius: 14px;
+      padding: 10px; display: flex; justify-content: center; align-items: center; margin-bottom: 12px;
+      overflow: hidden;
+    }
+    canvas {
+      max-width: 100%; max-height: 330px; border-radius: 8px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6); touch-action: none;
+    }
+    .panel {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px; margin-bottom: 12px;
+    }
+    .panel h3 { font-size: 14px; margin-bottom: 10px; color: #e2e8f0; display: flex; justify-content: space-between; }
+    .row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    input[type="text"], input[type="password"], select, textarea {
+      width: 100%; background: #0b0f19; border: 1px solid var(--border); color: #fff;
+      padding: 10px 12px; border-radius: 10px; font-size: 13px; font-family: inherit;
+    }
+    .btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; color: #fff; padding: 11px 14px; border-radius: 10px;
+      font-weight: 700; font-size: 13px; cursor: pointer; width: 100%;
+    }
+    .btn-sec {
+      background: #1e293b; border: 1px solid var(--border); color: #fff;
+      padding: 9px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1;
+    }
+    .btn-danger { background: #7f1d1d; border-color: #991b1b; }
+    .swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .swatch {
+      width: 34px; height: 34px; border-radius: 8px; border: 2px solid #fff3; cursor: pointer;
+    }
+    .ai-chips { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .chip {
+      background: #0b0f19; border: 1px solid var(--border); padding: 9px 12px;
+      border-radius: 10px; font-size: 12px; cursor: pointer; text-align: left;
+    }
+    .chip:active { border-color: var(--accent2); }
+    .tabs {
+      position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
+      border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr);
+      padding: 8px 4px; z-index: 60;
+    }
+    .tab {
+      background: none; border: none; color: var(--muted); font-size: 11px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; font-weight: 600;
+    }
+    .tab.active { color: #818cf8; }
+    .tab span { font-size: 18px; }
+    .hidden { display: none !important; }
+    .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex;
+      align-items: center; justify-content: center; padding: 16px; z-index: 100;
+    }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 18px; width: 100%; max-width: 420px;
+    }
+    label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    input[type="color"] { width: 44px; height: 38px; border: none; background: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">🎨 Thumbnail Studio <span class="badge">AI PRO</span></div>
+  <div style="display:flex; gap:8px;">
+    <button class="icon-btn" onclick="openModal('settingsModal')">⚙ API</button>
+    <button class="icon-btn" style="background:#10b981; color:#052e16;" onclick="exportImage()">⬇ Save</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- Canvas Size Presets -->
+  <div class="presets">
+    <div class="preset-btn active" onclick="setPreset(1280, 720, this)">▶ YouTube<br>1280×720</div>
+    <div class="preset-btn" onclick="setPreset(1080, 1080, this)">◼ Social Post<br>1080×1080</div>
+    <div class="preset-btn" onclick="setPreset(1080, 1920, this)">📱 Reels/Story<br>1080×1920</div>
+  </div>
+
+  <!-- Live Canvas -->
+  <div class="canvas-wrap">
+    <canvas id="studioCanvas" width="1280" height="720"></canvas>
+  </div>
+
+  <!-- TAB 1: AI HOOK GENERATOR -->
+  <div id="tab-ai" class="panel">
+    <h3>✨ AI Viral Hook & Caption Generator</h3>
+    <div class="row">
+      <input type="text" id="aiTopic" placeholder="Enter video or product topic (e.g. Earn Online in Pakistan, New Mobile Review)..." />
+    </div>
+    <div class="row">
+      <select id="aiLang">
+        <option value="English">English Viral Hooks</option>
+        <option value="Urdu">Urdu (اردو) Hooks</option>
+        <option value="Roman Urdu">Roman Urdu Hooks</option>
+      </select>
+    </div>
+    <button class="btn" id="aiGenBtn" onclick="generateAIHooks()">⚡ Generate Hooks & Apply to Canvas</button>
+    <div id="aiResults" class="ai-chips"></div>
+  </div>
+
+  <!-- TAB 2: TEXT & FONTS -->
+  <div id="tab-text" class="panel hidden">
+    <h3>🔤 Edit Selected Text <button class="btn-sec" style="max-width:110px;" onclick="addNewText()">+ Add Text</button></h3>
+    <div class="row">
+      <input type="text" id="textInput" placeholder="Type headline or Urdu text..." oninput="updateSelectedText()" />
+    </div>
+    <div class="row">
+      <select id="fontSelect" onchange="updateSelectedText()">
+        <option value="Anton">Anton (YouTube Bold)</option>
+        <option value="Montserrat">Montserrat ExtraBold</option>
+        <option value="Noto Nastaliq Urdu">Noto Nastaliq Urdu (اردو)</option>
+        <option value="Poppins">Poppins Clean</option>
+      </select>
+    </div>
+    <div class="row" style="align-items:center;">
+      <div style="flex:1;">
+        <label>Text Size: <span id="sizeVal">84</span>px</label>
+        <input type="range" id="sizeRange" min="28" max="180" value="84" oninput="updateSelectedText()" />
+      </div>
+      <div>
+        <label>Fill</label>
+        <input type="color" id="fillColor" value="#ffffff" oninput="updateSelectedText()" />
+      </div>
+      <div>
+        <label>Stroke</label>
+        <input type="color" id="strokeColor" value="#000000" oninput="updateSelectedText()" />
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn-sec" onclick="addBadge('NEW 2026 🔥')">+ Fire Badge</button>
+      <button class="btn-sec" onclick="addBadge('100% FREE')">+ Free Badge</button>
+      <button class="btn-sec btn-danger" onclick="deleteSelected()">🗑 Delete Layer</button>
+    </div>
+  </div>
+
+  <!-- TAB 3: BACKGROUND & PHOTOS -->
+  <div id="tab-bg" class="panel hidden">
+    <h3>🖼 Background & Stickers</h3>
+    <label>Pro Gradient Presets</label>
+    <div class="swatches">
+      <div class="swatch" style="background:linear-gradient(135deg,#0f172a,#312e81);" onclick="setBgGradient('#0f172a','#312e81')"></div>
+      <div class="swatch" style="background:linear-gradient(135deg,#7f1d1d,#f59e0b);" onclick="setBgGradient('#7f1d1d','#f59e0b')"></div>
+      <div class="swatch" style="background:linear-gradient(135deg,#064e3b,#10b981);" onclick="setBgGradient('#064e3b','#10b981')"></div>
+      <div class="swatch" style="background:linear-gradient(135deg,#4c1d95,#ec4899);" onclick="setBgGradient('#4c1d95','#ec4899')"></div>
+      <div class="swatch" style="background:linear-gradient(135deg,#111827,#000000);" onclick="setBgGradient('#111827','#000000')"></div>
+      <div class="swatch" style="background:linear-gradient(135deg,#1e3a8a,#06b6d4);" onclick="setBgGradient('#1e3a8a','#06b6d4')"></div>
+    </div>
+    <div class="row">
+      <label class="btn-sec" style="text-align:center;">
+        📷 Set Background Photo
+        <input type="file" accept="image/*" hidden onchange="uploadImage(event, true)" />
+      </label>
+      <label class="btn-sec" style="text-align:center;">
+        🧍 Add Overlay Image / Logo
+        <input type="file" accept="image/*" hidden onchange="uploadImage(event, false)" />
+      </label>
+    </div>
+  </div>
+
+  <!-- TAB 4: TEMPLATES -->
+  <div id="tab-tpl" class="panel hidden">
+    <h3>⚡ One-Tap Viral Templates</h3>
+    <div class="row">
+      <button class="btn-sec" onclick="applyTemplate('youtube')">🔥 Tech / Earning Hook</button>
+      <button class="btn-sec" onclick="applyTemplate('urdu')">🌙 Urdu Islamic / Story</button>
+    </div>
+    <div class="row">
+      <button class="btn-sec" onclick="applyTemplate('promo')">🛍 Store / Offer Post</button>
+      <button class="btn-sec" onclick="applyTemplate('study')">🎓 Exam / Study Alert</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('ai', this)"><span>✨</span>AI Hooks</button>
+  <button class="tab" onclick="switchTab('text', this)"><span>🔤</span>Text</button>
+  <button class="tab" onclick="switchTab('bg', this)"><span>🖼</span>Media</button>
+  <button class="tab" onclick="switchTab('tpl', this)"><span>⚡</span>Templates</button>
+</div>
+
+<!-- API Key Modal -->
+<div id="settingsModal" class="modal hidden">
+  <div class="modal-box">
+    <h3 style="margin-bottom:8px;">⚙ Gemini API Key</h3>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">
+      Enter your Google AI Studio API key (uses <b>gemini-3.8-flash</b>). Saved locally on your device.
+    </p>
+    <input type="password" id="apiKeyInput" placeholder="AIzaSy..." />
+    <div class="row" style="margin-top:12px;">
+      <button class="btn-sec" onclick="closeModal('settingsModal')">Cancel</button>
+      <button class="btn" style="flex:1;" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('studioCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let state = {
+    bgType: 'gradient',
+    c1: '#0f172a',
+    c2: '#312e81',
+    bgImg: null,
+    layers: [
+      { id: 1, type: 'text', text: 'HOW TO MAKE VIRAL', x: 640, y: 270, size: 96, font: 'Anton', fill: '#facc15', stroke: '#000000' },
+      { id: 2, type: 'text', text: 'THUMBNAILS IN 10 SEC!', x: 640, y: 400, size: 86, font: 'Anton', fill: '#ffffff', stroke: '#000000' },
+      { id: 3, type: 'badge', text: 'AI POWERED 🔥', x: 640, y: 530, size: 42, font: 'Montserrat', fill: '#ffffff', bg: '#ec4899' }
+    ],
+    selectedId: 1
+  };
+
+  let dragging = false, dragOffsetX = 0, dragOffsetY = 0;
+
+  function render() {
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (state.bgType === 'image' && state.bgImg) {
+      ctx.drawImage(state.bgImg, 0, 0, w, h);
+      ctx.fillStyle = 'rgba(0,0,0,0.32)';
+      ctx.fillRect(0, 0, w, h);
+    } else {
+      const grad = ctx.createLinearGradient(0, 0, w, h);
+      grad.addColorStop(0, state.c1);
+      grad.addColorStop(1, state.c2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // Subtle grid accent
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(24, 24, w - 48, h - 48);
+
+    state.layers.forEach(layer => {
+      ctx.save();
+      if (layer.type === 'image' && layer.img) {
+        ctx.drawImage(layer.img, layer.x - layer.w / 2, layer.y - layer.h / 2, layer.w, layer.h);
+      } else if (layer.type === 'badge') {
+        ctx.font = `900 ${layer.size}px "${layer.font}", sans-serif`;
+        const metrics = ctx.measureText(layer.text);
+        const bw = metrics.width + 54, bh = layer.size + 28;
+        ctx.fillStyle = layer.bg || '#ec4899';
+        roundRect(ctx, layer.x - bw / 2, layer.y - bh / 2, bw, bh, 18);
+        ctx.fill();
+        ctx.fillStyle = layer.fill || '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(layer.text, layer.x, layer.y + 2);
+      } else {
+        ctx.font = `900 ${layer.size}px "${layer.font}", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.max(8, layer.size * 0.14);
+        ctx.strokeStyle = layer.stroke || '#000';
+        ctx.strokeText(layer.text, layer.x, layer.y);
+        ctx.fillStyle = layer.fill || '#fff';
+        ctx.fillText(layer.text, layer.x, layer.y);
+      }
+
+      if (layer.id === state.selectedId) {
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        const boxW = layer.type === 'image' ? layer.w : 520;
+        const boxH = layer.type === 'image' ? layer.h : layer.size + 30;
+        ctx.strokeRect(layer.x - boxW / 2, layer.y - boxH / 2, boxW, boxH);
+      }
+      ctx.restore();
+    });
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function getPointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    const pos = getPointerPos(e);
+    for (let i = state.layers.length - 1; i >= 0; i--) {
+      const l = state.layers[i];
+      const hw = l.type === 'image' ? l.w / 2 : 280;
+      const hh = l.type === 'image' ? l.h / 2 : l.size * 0.7;
+      if (Math.abs(pos.x - l.x) < hw && Math.abs(pos.y - l.y) < hh) {
+        state.selectedId = l.id;
+        syncControls();
+        dragging = true;
+        dragOffsetX = pos.x - l.x;
+        dragOffsetY = pos.y - l.y;
+        render();
+        return;
+      }
+    }
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const pos = getPointerPos(e);
+    const l = state.layers.find(x => x.id === state.selectedId);
+    if (l) {
+      l.x = pos.x - dragOffsetX;
+      l.y = pos.y - dragOffsetY;
+      render();
+    }
+  });
+
+  window.addEventListener('pointerup', () => dragging = false);
+
+  function syncControls() {
+    const l = state.layers.find(x => x.id === state.selectedId);
+    if (!l || l.type === 'image') return;
+    document.getElementById('textInput').value = l.text;
+    document.getElementById('fontSelect').value = l.font;
+    document.getElementById('sizeRange').value = l.size;
+    document.getElementById('sizeVal').textContent = l.size;
+    document.getElementById('fillColor').value = l.fill;
+    if (l.stroke) document.getElementById('strokeColor').value = l.stroke;
+  }
+
+  function updateSelectedText() {
+    const l = state.layers.find(x => x.id === state.selectedId);
+    if (!l || l.type === 'image') return;
+    l.text = document.getElementById('textInput').value;
+    l.font = document.getElementById('fontSelect').value;
+    l.size = parseInt(document.getElementById('sizeRange').value, 10);
+    document.getElementById('sizeVal').textContent = l.size;
+    l.fill = document.getElementById('fillColor').value;
+    l.stroke = document.getElementById('strokeColor').value;
+    render();
+  }
+
+  function addNewText() {
+    const id = Date.now();
+    state.layers.push({
+      id, type: 'text', text: 'NEW HEADLINE', x: canvas.width / 2, y: canvas.height / 2,
+      size: 80, font: 'Anton', fill: '#ffffff', stroke: '#000000'
+    });
+    state.selectedId = id;
+    syncControls();
+    render();
+  }
+
+  function addBadge(txt) {
+    const id = Date.now();
+    state.layers.push({
+      id, type: 'badge', text: txt, x: canvas.width / 2, y: canvas.height * 0.78,
+      size: 42, font: 'Montserrat', fill: '#ffffff', bg: '#ef4444'
+    });
+    state.selectedId = id;
+    render();
+  }
+
+  function deleteSelected() {
+    state.layers = state.layers.filter(l => l.id !== state.selectedId);
+    state.selectedId = state.layers.length ? state.layers[state.layers.length - 1].id : null;
+    render();
+  }
+
+  function setBgGradient(c1, c2) {
+    state.bgType = 'gradient';
+    state.c1 = c1; state.c2 = c2;
+    render();
+  }
+
+  function uploadImage(e, asBg) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        if (asBg) {
+          state.bgType = 'image';
+          state.bgImg = img;
+        } else {
+          const id = Date.now();
+          const scale = Math.min(360 / img.width, 360 / img.height);
+          state.layers.push({
+            id, type: 'image', img, x: canvas.width / 2, y: canvas.height / 2,
+            w: img.width * scale, h: img.height * scale
+          });
+          state.selectedId = id;
+        }
+        render();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function setPreset(w, h, el) {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    canvas.width = w; canvas.height = h;
+    state.layers.forEach((l, i) => {
+      l.x = w / 2;
+      l.y = h * (0.32 + i * 0.22);
+    });
+    render();
+  }
+
+  function applyTemplate(type) {
+    const w = canvas.width, h = canvas.height;
+    if (type === 'youtube') {
+      setBgGradient('#7f1d1d', '#f59e0b');
+      state.layers = [
+        { id: 1, type: 'text', text: '100% SECRET TRICK', x: w/2, y: h*0.34, size: 92, font: 'Anton', fill: '#facc15', stroke: '#000' },
+        { id: 2, type: 'text', text: 'NOBODY TELLS YOU!', x: w/2, y: h*0.56, size: 84, font: 'Anton', fill: '#fff', stroke: '#000' },
+        { id: 3, type: 'badge', text: 'WATCH NOW ▶', x: w/2, y: h*0.78, size: 40, font: 'Montserrat', fill: '#fff', bg: '#dc2626' }
+      ];
+    } else if (type === 'urdu') {
+      setBgGradient('#064e3b', '#0f172a');
+      state.layers = [
+        { id: 1, type: 'text', text: 'سبق آموز اسلامی کہانی', x: w/2, y: h*0.36, size: 78, font: 'Noto Nastaliq Urdu', fill: '#fde047', stroke: '#000' },
+        { id: 2, type: 'text', text: 'دل کو چھو لینے والا واقعہ', x: w/2, y: h*0.64, size: 64, font: 'Noto Nastaliq Urdu', fill: '#fff', stroke: '#000' }
+      ];
+    } else if (type === 'promo') {
+      setBgGradient('#4c1d95', '#ec4899');
+      state.layers = [
+        { id: 1, type: 'badge', text: 'MEGA SALE 50% OFF', x: w/2, y: h*0.26, size: 42, font: 'Montserrat', fill: '#000', bg: '#facc15' },
+        { id: 2, type: 'text', text: 'LIMITED TIME OFFER', x: w/2, y: h*0.52, size: 86, font: 'Anton', fill: '#fff', stroke: '#000' },
+        { id: 3, type: 'text', text: 'ORDER NOW ONLINE', x: w/2, y: h*0.74, size: 54, font: 'Montserrat', fill: '#a5f3fc', stroke: '#000' }
+      ];
+    } else {
+      setBgGradient('#1e3a8a', '#06b6d4');
+      state.layers = [
+        { id: 1, type: 'text', text: 'EXAM PREPARATION 2026', x: w/2, y: h*0.35, size: 82, font: 'Anton', fill: '#fff', stroke: '#000' },
+        { id: 2, type: 'text', text: 'TOP 50 IMPORTANT MCQS', x: w/2, y: h*0.58, size: 74, font: 'Anton', fill: '#fde047', stroke: '#000' }
+      ];
+    }
+    state.selectedId = 1;
+    render();
+  }
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    ['ai', 'text', 'bg', 'tpl'].forEach(id => {
+      document.getElementById('tab-' + id).classList.toggle('hidden', id !== name);
+    });
+  }
+
+  function openModal(id) {
+    document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
+    document.getElementById(id).classList.remove('hidden');
+  }
+  function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+  function saveApiKey() {
+    localStorage.setItem('gemini_api_key', document.getElementById('apiKeyInput').value.trim());
+    closeModal('settingsModal');
+    alert('API Key Saved!');
+  }
+
+  async function generateAIHooks() {
+    const key = localStorage.getItem('gemini_api_key');
+    if (!key) { openModal('settingsModal'); return; }
+    const topic = document.getElementById('aiTopic').value.trim();
+    if (!topic) { alert('Please enter a topic first!'); return; }
+    const lang = document.getElementById('aiLang').value;
+
+    const btn = document.getElementById('aiGenBtn');
+    btn.disabled = true; btn.textContent = '⏳ Generating Hooks...';
+
+    const prompt = `Generate 4 short, high-CTR thumbnail headline pairs (each has Line 1 max 4 words and Line 2 max 4 words) in ${lang} for the topic: "${topic}". Return ONLY valid JSON array like: [{"line1":"...","line2":"..."}]`;
+
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(key)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      const raw = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+      const hooks = JSON.parse(raw);
+
+      const box = document.getElementById('aiResults');
+      box.innerHTML = '';
+      hooks.forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'chip';
+        div.innerHTML = `<b>${h.line1}</b><br><span style="color:#94a3b8">${h.line2}</span>`;
+        div.onclick = () => {
+          const isUrdu = lang === 'Urdu';
+          const f = isUrdu ? 'Noto Nastaliq Urdu' : 'Anton';
+          state.layers[0].text = h.line1;
+          state.layers[0].font = f;
+          if (state.layers[1]) {
+            state.layers[1].text = h.line2;
+            state.layers[1].font = f;
+          }
+          render();
+        };
+        box.appendChild(div);
+      });
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '⚡ Generate Hooks & Apply to Canvas';
+    }
+  }
+
+  function exportImage() {
+    const prevSel = state.selectedId;
+    state.selectedId = null;
+    render();
+    const link = document.createElement('a');
+    link.download = `Thumbnail_${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png', 1.0);
+    link.click();
+    state.selectedId = prevSel;
+    render();
+  }
+
+  document.fonts.ready.then(() => { syncControls(); render(); });
+</script>
+</body>
+</html>
