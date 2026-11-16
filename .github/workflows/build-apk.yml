@@ -28,6 +28,18 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Generate Custom App Icons & Splash
+        run: |
+          if [ -d "assets" ]; then
+            npx capacitor-assets generate --android
+          fi
+
+      - name: Inject AdMob App ID into AndroidManifest.xml
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          ADMOB_META='<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>'
+          sed -i "s|</application>|    ${ADMOB_META}\n    </application>|g" "$MANIFEST"
+
       - name: Build Debug APK
         run: |
           cd android
